@@ -5,13 +5,19 @@ fun main() {
     terminal.enterRawMode() // Disables line buffering
     val reader = terminal.reader()
     println("Press any key (Press 'q' to quit)...")
-    val charbuffer = MutableList(2) { 'a' }
+    val charbuffer = MutableList(3) { 0 }
     while (true) {
         val charCode = reader.read()
-        val char = charCode.toChar()
-        charbuffer.add(0, char)
-        if (charbuffer.size > 2) charbuffer.removeLast()
+        charbuffer.add(0, charCode)
+        if (charbuffer.size > 3) charbuffer.removeLast()
+        var char = charCode.toChar()
+        if (charCode == 27) {
+            char = '^'
+        }
+        if (charbuffer == listOf(68, 79, 27))
+            println("Left")
+        println(charbuffer)
         println("Key detected: $char (Code: $charCode)")
-        println("Last two keys detected: $charbuffer")
+
     }
 }
