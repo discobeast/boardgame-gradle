@@ -10,14 +10,11 @@ fun main() {
         val charCode = reader.read()
         charbuffer.add(0, charCode)
         if (charbuffer.size > 3) charbuffer.removeLast()
-        var char = charCode.toChar()
-        if (charCode == 27) {
-            char = '^'
+        when (charbuffer){
+            listOf(68, 79, 27) -> println("LEFT")
+            listOf(65, 79, 27) -> println("UP")
+            listOf(66, 79, 27) -> println("DOWN")
+            listOf(67, 79, 27) -> println("RIGHT")
         }
-        if (charbuffer == listOf(68, 79, 27))
-            println("Left")
-        println(charbuffer)
-        println("Key detected: $char (Code: $charCode)")
-
     }
 }
