@@ -7,33 +7,32 @@ fun <E> MutableList<E>.switch(index: Int, index2: Int) {
     Collections.swap(this, index, index2)
 }
 
-fun <E> MutableList<E>.findAdjacent(size: Int = 1): MutableMap<Int, Int> {
+fun <E> MutableList<E>.findAdjacent(size: Int = 2, skip: List<E> = listOf()): MutableMap<Int, Int> {
     val chains = mutableMapOf<Int, Int>()
-    this.forEachIndexed { index, _ ->
-        println("running index $index")
+    this.forEachIndexed { index, value ->
+//        println("running index $index")
+        if (value in skip) return@forEachIndexed
         chains.forEach { (key, num) ->
-            println("Checking if index $index is part of a chain")
-            println("Checking if $index is in range ${(key..<num + key)}")
-            if (index in (key..<num)) {
-                println("Index $index is part of a chain $key")
+//            println("Checking if $index is in range ${(key..<num + key)}")
+            if (index in (key..<num + key) || value in skip) {
+//                println("Index $index is part of chain $key")
                 return@forEachIndexed
             }
-            println("Index $index is not part of a chain")
-
         }
+//        println("Index $index is not part of a chain")
         var num = 1
         var matches = 1
         while (num > 0) {
             num--
-            println("Checking ${index + matches}")
+//            println("Checking ${index + matches}")
             if (index + matches - 1 != this.size - 1 && this[index + matches] == this[index + matches - 1]) {
                 num++
                 matches++
-                println("Found match ${index + num} Chain length: $matches")
-            } else println("No more matches $matches")
+//                println("Found match ${index + num} Chain length: $matches")
+            } //else println("No more matches $matches")
         }
-        println("appending chain")
-        if (matches > size) chains[index] = matches
+//        println("appending chain")
+        if (matches >= size) chains[index] = matches
     }
     return chains
 }
@@ -68,15 +67,51 @@ fun waitforkey(reader: NonBlockingReader): Int {
     }
 }
 
+private fun checkBoard(board: MutableList<Int>) {
+    board.forEachIndexed { index, value ->
+        if (index == 0 || index == board.size - 1 || value == -1) {
+            return@forEachIndexed
+        }
+        val opponentValue = (board[index] + 1) % 2
+        if (board[index - 1] == opponentValue && board[index + 1] == opponentValue) {
+            board[index] = -1
+        }
+    }
+    board.findAdjacent(3, listOf(-1)).forEach { (chain, size) ->
+        for (index in 0 until size) {
+            board[index + chain] = -1
+        }
+        //MAY BE ERROR WHERE COINS ON SIDES ARE NOT COUNTED FOR CHAINS
+    }
+
+}
+
+private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
+    print("[")
+    board.forEachIndexed { index, value ->
+        var displayed = "#"
+        when (value) {
+            0 -> displayed = displayed.red()
+            1 -> displayed = displayed.blue()
+        }
+        if (index == cursorPos)
+            displayed = displayed.bgGrey()
+        if (index == board.size - 1) {
+            print(displayed)
+        } else {
+            print("$displayed, ")
+        }
+    }
+    println("]")
+}
+
 fun main() {
     val terminal = TerminalBuilder.builder().build()
     terminal.enterRawMode() // Disables line buffering
     val reader = terminal.reader()
-    val board = MutableList(12) { (-1..1).random() }
+    val board = MutableList(12) { -1 }
     val sel = MutableList(12) { " " }
     sel[0] = "^"
-    var valueSelected = false
-    var index1 = -1
     var player = (0..1).random()
     var opponent = (player + 1) % 2
     var cursorPos = 0
@@ -97,27 +132,11 @@ fun main() {
         }
         cursorPos = sel.indexOf("^")
         print("\u001b[H\u001b[2J")
-        println(board.findAdjacent())
-        board.forEachIndexed { index, value ->
-            if (index == 0 || index == board.size - 1) {
-                return@forEachIndexed
-            }
-            if (board[index - 1] == (board[index - 1] + 1) % 2 && board[index - 1] == (board[index - 1] + 1) % 2) {
-                board[index] = -1
-            }
-        }
-        print("[")
-        board.forEachIndexed { index, value ->
-            when (value) {
-                -1 -> print("#, ")
-                0 -> print("${"#".bgBlue()}, ")
-                1 -> print("${"#".bgRed()}, ")
-            }
-        }
-        println("]")
-        println(opponent)
-        println(player)
+        println(board.findAdjacent(3, listOf(-1)))
+        checkBoard(board)
+        displayBoard(board, cursorPos)
         println(sel)
-        println(cursorPos)
     }
 }
+
+
