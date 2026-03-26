@@ -1,6 +1,8 @@
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.NonBlockingReader
 import java.util.*
+private var bluepoints = 0
+private var redpoints = 0
 
 fun <E> MutableList<E>.switch(index: Int, index2: Int) {
     if (index2 == -1 || index2 >= this.size) return
@@ -37,7 +39,7 @@ fun <E> MutableList<E>.findAdjacent(size: Int = 2, skip: List<E> = listOf()): Mu
     return chains
 }
 
-fun waitforkey(reader: NonBlockingReader): Int {
+fun waitForKey(reader: NonBlockingReader): Int {
     var char: Int = -1
     var numVals = 1
     var cursorKey = false
@@ -78,6 +80,10 @@ private fun checkBoard(board: MutableList<Int>) {
         }
     }
     board.findAdjacent(3, listOf(-1)).forEach { (chain, size) ->
+        when (board[chain]){
+            1 -> bluepoints += size
+            0 -> redpoints += size
+        }
         for (index in 0 until size) {
             board[index + chain] = -1
         }
@@ -116,7 +122,7 @@ fun main() {
     var opponent = (player + 1) % 2
     var cursorPos = 0
     while (true) {
-        val keypress = waitforkey(reader)
+        val keypress = waitForKey(reader)
         when (keypress) {
             1 -> {
                 //( (cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos-1] != opponent || board[cursorPos+1] != opponent) ) && (board[cursorPos] == -1)
@@ -132,10 +138,12 @@ fun main() {
         }
         cursorPos = sel.indexOf("^")
         print("\u001b[H\u001b[2J")
-        println(board.findAdjacent(3, listOf(-1)))
+//        println(board.findAdjacent(3, listOf(-1)))
         checkBoard(board)
         displayBoard(board, cursorPos)
         println(sel)
+        println(if (player == 0) "red" else "blue")
+        println("Blue: $bluepoints | Red: $redpoints")
     }
 }
 
