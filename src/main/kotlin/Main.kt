@@ -1,6 +1,7 @@
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.NonBlockingReader
 import java.util.*
+
 private var bluepoints = 0
 private var redpoints = 0
 
@@ -80,14 +81,13 @@ private fun checkBoard(board: MutableList<Int>) {
         }
     }
     board.findAdjacent(3, listOf(-1)).forEach { (chain, size) ->
-        when (board[chain]){
+        when (board[chain]) {
             1 -> bluepoints += size
             0 -> redpoints += size
         }
         for (index in 0 until size) {
             board[index + chain] = -1
         }
-        //MAY BE ERROR WHERE COINS ON SIDES ARE NOT COUNTED FOR CHAINS
     }
 
 }
@@ -122,6 +122,9 @@ fun main() {
     var opponent = (player + 1) % 2
     var cursorPos = 0
     while (true) {
+        if (bluepoints >= 10 || redpoints >= 10) {
+            break
+        }
         val keypress = waitForKey(reader)
         when (keypress) {
             1 -> {
@@ -138,13 +141,19 @@ fun main() {
         }
         cursorPos = sel.indexOf("^")
         print("\u001b[H\u001b[2J")
+        println("${if (player == 0) "Red" else "Blue"}'s turn.")
 //        println(board.findAdjacent(3, listOf(-1)))
         checkBoard(board)
         displayBoard(board, cursorPos)
         println(sel)
-        println(if (player == 0) "red" else "blue")
         println("Blue: $bluepoints | Red: $redpoints")
     }
+    if (bluepoints >= 10) {
+        println("Blue won")
+    } else if (redpoints >= 10) {
+        println("Red won")
+    }
 }
+
 
 
