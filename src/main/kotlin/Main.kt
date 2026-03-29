@@ -4,6 +4,9 @@ import java.util.*
 
 private var bluepoints = 0
 private var redpoints = 0
+private const val POINTS_TO_WIN = 10
+private const val BOT_TEAM = 1
+private const val BOT = false
 
 fun <E> MutableList<E>.switch(index: Int, index2: Int) {
     if (index2 == -1 || index2 >= this.size) return
@@ -111,6 +114,30 @@ private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
     println("]")
 }
 
+private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent: Int) =
+    ((cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)) && (board[cursorPos] == -1)
+
+private fun bestNextMove(board: MutableList<Int>, team: Int): Int {
+    val opponent = (team + 1) % 2
+    //Find positions of opponent pieces:
+    val opponentPositions = mutableListOf<Int>()
+    board.forEachIndexed { index, value ->
+        if (value == opponent)
+            opponentPositions.add(index)
+    }
+    //Operations
+    //Find a spot to score points
+    //Find spot to remove enemy counters
+    //Find a spot to block an enemy chain
+    //Find a spot to create a chain precursor (Preferably with center open so enemy cannot block it
+    //Find a spot to place a counter that is safe from enemy (1 free space on either side)
+    //Place counter randomly
+    //Forfit
+
+
+    return TODO()
+}
+
 fun main() {
     val terminal = TerminalBuilder.builder().build()
     terminal.enterRawMode() // Disables line buffering
@@ -122,14 +149,13 @@ fun main() {
     var opponent = (player + 1) % 2
     var cursorPos = 0
     while (true) {
-        if (bluepoints >= 10 || redpoints >= 10) {
+        if (bluepoints >= POINTS_TO_WIN || redpoints >= POINTS_TO_WIN) {
             break
         }
-        val keypress = waitForKey(reader)
-        when (keypress) {
+        when (waitForKey(reader)) {
             1 -> {
                 //( (cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos-1] != opponent || board[cursorPos+1] != opponent) ) && (board[cursorPos] == -1)
-                if (((cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)) && (board[cursorPos] == -1)) {
+                if (checkValidPosition(cursorPos, board, opponent)) {
                     board[cursorPos] = player
                     player = opponent
                     opponent = (player + 1) % 2
@@ -148,12 +174,13 @@ fun main() {
         println(sel)
         println("Blue: $bluepoints | Red: $redpoints")
     }
-    if (bluepoints >= 10) {
+    if (bluepoints >= POINTS_TO_WIN) {
         println("Blue won")
-    } else if (redpoints >= 10) {
+    } else {
         println("Red won")
     }
 }
+
 
 
 
