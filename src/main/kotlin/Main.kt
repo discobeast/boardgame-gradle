@@ -6,7 +6,7 @@ private var bluepoints = 0
 private var redpoints = 0
 private const val POINTS_TO_WIN = 10
 private const val BOT_TEAM = 1
-private const val BOT = false
+private const val BOT = true
 
 fun <E> MutableList<E>.switch(index: Int, index2: Int) {
     if (index2 == -1 || index2 >= this.size) return
@@ -117,25 +117,72 @@ private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
 private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent: Int) =
     ((cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)) && (board[cursorPos] == -1)
 
-private fun bestNextMove(board: MutableList<Int>, team: Int): Int {
-    val opponent = (team + 1) % 2
-    //Find positions of opponent pieces:
-    val opponentPositions = mutableListOf<Int>()
-    board.forEachIndexed { index, value ->
-        if (value == opponent)
-            opponentPositions.add(index)
-    }
+private fun bestNextMove(board: MutableList<Int>): Int {
+    val opponent = (BOT_TEAM + 1) % 2
+    var returned = -1
+    //with 1 as bot counter and 0 as opponent counter
     //Operations
     //Find a spot to score points
-    //Find spot to remove enemy counters
+    //Go through the list and either find patterns like 1 -1 1 or -1 1 1 or 1 1 -1
+    returned = findScorePoint(board, opponent)
+    if (returned != -1) {
+        return returned
+    }
     //Find a spot to block an enemy chain
+    // find patterns like -1 0 0 or 0 0 -1
+    //Find spot to remove enemy counters
+    // look for patterns like -1 0 1 or 1 0 -1
     //Find a spot to create a chain precursor (Preferably with center open so enemy cannot block it
+    // look for patterns like 1 -1 -1 or -1 1 -1 or -1 -1 1
     //Find a spot to place a counter that is safe from enemy (1 free space on either side)
-    //Place counter randomly
+    // look for patterns like -1 -1 -1 or 0 -1 -1 or -1 -1 0
+    returned = 1
+    while (!checkValidPosition(returned, board, opponent)) {
+        returned = (0..<board.size).random()
+        print(returned)
+    }
     //Forfit
 
 
-    return TODO()
+    return returned
+}
+
+private fun findScorePoint(board: MutableList<Int>, opponent: Int): Int {
+    val possibleScoringPoints = mutableListOf<Int>()
+    board.forEachIndexed { index, value ->
+        if (value == -1) {
+            //index < board.size
+            //index > 0
+            if (index < board.size - 1 && index > 0 && board[index - 1] == BOT_TEAM && board[index + 1] == BOT_TEAM) {
+                possibleScoringPoints.add(index)
+            } else if (index > 1 && board[index - 1] == BOT_TEAM && board[index - 2] == BOT_TEAM) {
+                possibleScoringPoints.add(index)
+            } else if (index < board.size - 1 && board[index + 1] == BOT_TEAM && board[index + 2] == BOT_TEAM) {
+                possibleScoringPoints.add(index)
+            }
+        }
+    }
+    val possibleScoringChains = mutableMapOf<Int, Int>()
+    for (possibleScoringPoint in possibleScoringPoints) {
+        val boardCopy = board.toMutableList()
+        if (checkValidPosition(possibleScoringPoint, board, opponent)) {
+            boardCopy[possibleScoringPoint] = BOT_TEAM
+            boardCopy.findAdjacent(3, listOf(-1, opponent)).forEach { (key, value) ->
+                if (possibleScoringPoint in (key..key + value)) {
+                    possibleScoringChains[possibleScoringPoint] = value
+                    return@forEach
+                }
+            }
+        }
+    }
+    println(possibleScoringChains)
+    println(possibleScoringPoints)
+    if (possibleScoringChains.isNotEmpty()) {
+        val index = possibleScoringChains.maxByOrNull { it.value }!!.key
+        println(index)
+        return index
+    }
+    return -1
 }
 
 fun main() {
@@ -152,20 +199,30 @@ fun main() {
         if (bluepoints >= POINTS_TO_WIN || redpoints >= POINTS_TO_WIN) {
             break
         }
-        when (waitForKey(reader)) {
-            1 -> {
-                //( (cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos-1] != opponent || board[cursorPos+1] != opponent) ) && (board[cursorPos] == -1)
-                if (checkValidPosition(cursorPos, board, opponent)) {
-                    board[cursorPos] = player
-                    player = opponent
-                    opponent = (player + 1) % 2
-                }
+        // if BOT is true then check if it is the bots turn otherwise always return true
+        if (BOT && player == BOT_TEAM) {
+            val botmove = bestNextMove(board)
+            if (botmove != -1) {
+                board[botmove] = player
             }
+            player = opponent
+            opponent = (player + 1) % 2
+        } else {
+            when (waitForKey(reader)) {
+                1 -> {
+                    //( (cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos-1] != opponent || board[cursorPos+1] != opponent) ) && (board[cursorPos] == -1)
+                    if (checkValidPosition(cursorPos, board, opponent)) {
+                        board[cursorPos] = player
+                        player = opponent
+                        opponent = (player + 1) % 2
+                    }
+                }
 
-            3 -> sel.switch(cursorPos, cursorPos + 1)
-            4 -> sel.switch(cursorPos, cursorPos - 1)
+                3 -> sel.switch(cursorPos, cursorPos + 1)
+                4 -> sel.switch(cursorPos, cursorPos - 1)
+            }
+            cursorPos = sel.indexOf("^")
         }
-        cursorPos = sel.indexOf("^")
         print("\u001b[H\u001b[2J")
         println("${if (player == 0) "Red" else "Blue"}'s turn.")
 //        println(board.findAdjacent(3, listOf(-1)))
@@ -173,6 +230,7 @@ fun main() {
         displayBoard(board, cursorPos)
         println(sel)
         println("Blue: $bluepoints | Red: $redpoints")
+        bestNextMove(board)
     }
     if (bluepoints >= POINTS_TO_WIN) {
         println("Blue won")
