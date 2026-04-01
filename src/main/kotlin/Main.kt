@@ -114,8 +114,11 @@ private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
     println("]")
 }
 
-private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent: Int) =
-    ((cursorPos == 0 || cursorPos == board.size - 1) || (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)) && (board[cursorPos] == -1)
+// if check if point is within bounds (cursorPos >= 0 && cursorPos <= board.size - 1) && board[cursorPos] != -1 && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)
+private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent: Int): Boolean {
+    println(cursorPos)
+    return ((cursorPos >= 0 && cursorPos <= board.size - 1) && board[cursorPos] == -1 && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))
+}
 
 private fun bestNextMove(board: MutableList<Int>): Int {
     val opponent = (BOT_TEAM + 1) % 2
@@ -136,10 +139,14 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     // look for patterns like 1 -1 -1 or -1 1 -1 or -1 -1 1
     //Find a spot to place a counter that is safe from enemy (1 free space on either side)
     // look for patterns like -1 -1 -1 or 0 -1 -1 or -1 -1 0
-    returned = 1
+    println("DEBUG")
+    returned = (0..<board.size).random()
+    println(returned)
+    println(checkValidPosition(returned, board, opponent).toString())
     while (!checkValidPosition(returned, board, opponent)) {
         returned = (0..<board.size).random()
-        print(returned)
+        println(checkValidPosition(returned, board, opponent))
+        println(returned)
     }
     //Forfit
 
@@ -200,6 +207,7 @@ fun main() {
             break
         }
         // if BOT is true then check if it is the bots turn otherwise always return true
+        println((BOT && player == BOT_TEAM))
         if (BOT && player == BOT_TEAM) {
             val botmove = bestNextMove(board)
             if (botmove != -1) {
