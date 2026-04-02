@@ -114,10 +114,16 @@ private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
     println("]")
 }
 
-// if check if point is within bounds (cursorPos >= 0 && cursorPos <= board.size - 1) && board[cursorPos] != -1 && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)
 private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent: Int): Boolean {
-    println(cursorPos)
-    return ((cursorPos >= 0 && cursorPos <= board.size - 1) && board[cursorPos] == -1 && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))
+    // Revised: First check if point is either (free on either side and valid spot) or (0,board.size - 1) then check if value is not -1
+    // (cursorPos == 0 || cursorPos == board.size - 1)
+    // (cursorPos > 0 && cursorPos < board.size-1)
+    // (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)
+    // (board[cursorPos] == -1)
+    // (cursorPos > 0 && cursorPos < board.size-1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)
+    // (((cursorPos == 0 || cursorPos == board.size - 1)||((cursorPos > 0 && cursorPos < board.size-1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))) && board[cursorPos] == -1)
+
+    return (((cursorPos == 0 || cursorPos == board.size - 1)||((cursorPos > 0 && cursorPos < board.size-1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))) && board[cursorPos] == -1)
 }
 
 private fun bestNextMove(board: MutableList<Int>): Int {
@@ -127,27 +133,37 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     //Operations
     //Find a spot to score points
     //Go through the list and either find patterns like 1 -1 1 or -1 1 1 or 1 1 -1
+    println("TRYING TO FIND SPOT TO SCORE")
     returned = findScorePoint(board, opponent)
     if (returned != -1) {
+        println("FOUND $returned")
         return returned
     }
+    println("TRYING TO FIND SPOT TO BLOCK")
     //Find a spot to block an enemy chain
     // find patterns like -1 0 0 or 0 0 -1
+    println("TRYING TO FIND SPOT TO REMOVE OPPONENT")
+    board.forEachIndexed { index, i ->
+
+    }
     //Find spot to remove enemy counters
     // look for patterns like -1 0 1 or 1 0 -1
+    println("TRYING TO FIND SPOT TO CONTINUE CHAIN")
     //Find a spot to create a chain precursor (Preferably with center open so enemy cannot block it
     // look for patterns like 1 -1 -1 or -1 1 -1 or -1 -1 1
+    println("TRYING TO FIND SAFE SPOT")
     //Find a spot to place a counter that is safe from enemy (1 free space on either side)
     // look for patterns like -1 -1 -1 or 0 -1 -1 or -1 -1 0
-    println("DEBUG")
-    returned = (0..<board.size).random()
-    println(returned)
-    println(checkValidPosition(returned, board, opponent).toString())
+    println("TRYING TO PICK RANDOM SPOT")
+    returned = -1
+//    println("PICKED $returned")
     while (!checkValidPosition(returned, board, opponent)) {
+//        println("$returned IS INVALID TRYING AGAIN")
         returned = (0..<board.size).random()
-        println(checkValidPosition(returned, board, opponent))
-        println(returned)
+//        println("PICKED $returned")
+//        println("VALID: ${checkValidPosition(returned, board, opponent)}")
     }
+    println("RETURNING MOVE$returned")
     //Forfit
 
 
@@ -164,7 +180,7 @@ private fun findScorePoint(board: MutableList<Int>, opponent: Int): Int {
                 possibleScoringPoints.add(index)
             } else if (index > 1 && board[index - 1] == BOT_TEAM && board[index - 2] == BOT_TEAM) {
                 possibleScoringPoints.add(index)
-            } else if (index < board.size - 1 && board[index + 1] == BOT_TEAM && board[index + 2] == BOT_TEAM) {
+            } else if (index < board.size - 2 && board[index + 1] == BOT_TEAM && board[index + 2] == BOT_TEAM) {
                 possibleScoringPoints.add(index)
             }
         }
@@ -238,7 +254,6 @@ fun main() {
         displayBoard(board, cursorPos)
         println(sel)
         println("Blue: $bluepoints | Red: $redpoints")
-        bestNextMove(board)
     }
     if (bluepoints >= POINTS_TO_WIN) {
         println("Blue won")
