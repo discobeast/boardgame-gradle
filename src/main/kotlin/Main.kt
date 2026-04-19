@@ -123,7 +123,7 @@ private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent
     // (cursorPos > 0 && cursorPos < board.size-1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent)
     // (((cursorPos == 0 || cursorPos == board.size - 1)||((cursorPos > 0 && cursorPos < board.size-1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))) && board[cursorPos] == -1)
 
-    return (((cursorPos == 0 || cursorPos == board.size - 1)||((cursorPos > 0 && cursorPos < board.size-1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))) && board[cursorPos] == -1)
+    return (((cursorPos == 0 || cursorPos == board.size - 1) || ((cursorPos > 0 && cursorPos < board.size - 1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))) && board[cursorPos] == -1)
 }
 
 private fun bestNextMove(board: MutableList<Int>): Int {
@@ -142,10 +142,32 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     println("TRYING TO FIND SPOT TO BLOCK")
     //Find a spot to block an enemy chain
     // find patterns like -1 0 0 or 0 0 -1
-    println("TRYING TO FIND SPOT TO REMOVE OPPONENT")
+    val possiblepoints = mutableListOf<Int>()
     board.forEachIndexed { index, i ->
-
+        if (index > 0 && index < board.size - 1) {
+            if (i == -1) {
+                if ((board[index - 1] == opponent && board[index + 1] != opponent) || (board[index + 1] == opponent && board[index - 1] != opponent)) {
+                    if (checkValidPosition(index, board, opponent)) {
+                        possiblepoints.add(index)
+                    }
+                }
+            }
+        }
     }
+    println("FOUND $possiblepoints")
+    val possiblepointsranked = mutableMapOf<Int, Int>()
+    possiblepoints.forEachIndexed { i, _ ->
+        val boardCopy = board.toMutableList()
+        boardCopy[i] = opponent
+        boardCopy.findAdjacent(2, listOf(-1, BOT_TEAM)).forEach { (key, value) ->
+            if (i in (key..key + value)) {
+                possiblepointsranked[i] = value
+                return@forEach
+            }
+        }
+    }
+    println("Ordered $possiblepointsranked")
+    println("TRYING TO FIND SPOT TO REMOVE OPPONENT")
     //Find spot to remove enemy counters
     // look for patterns like -1 0 1 or 1 0 -1
     println("TRYING TO FIND SPOT TO CONTINUE CHAIN")
