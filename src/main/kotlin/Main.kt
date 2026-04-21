@@ -43,6 +43,27 @@ fun <E> MutableList<E>.findAdjacent(size: Int = 2, skip: List<E> = listOf()): Mu
     return chains
 }
 
+fun <E> MutableList<E>.findPattern(pattern: List<Any?>, offset: Int = 0): List<Int> {
+    val matches = mutableListOf<Int>()
+    this.forEachIndexed { index, _ ->
+
+        if (index > 0 && index < this.size - 1) {
+            val slice = this.slice(index - 1..index + 1) as List<*>
+            val isMatch = pattern.zip(slice).all { (p, s) ->
+                when (p) {
+                    null -> true           // wildcard, matches anything
+                    is List<*> -> p.contains(s)  // multi-match, s must be in the list
+                    else -> p == s          // exact match
+                }
+            }
+            if (isMatch) {
+                matches.add(index + offset)
+            }
+        }
+    }
+    return matches
+}
+
 fun waitForKey(reader: NonBlockingReader): Int {
     var char: Int = -1
     var numVals = 1
@@ -141,72 +162,88 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     }
     println("TRYING TO FIND SPOT TO BLOCK")
     //Find a spot to block an enemy chain
-    // find patterns like -1 0 0 or 0 0 -1
+    //find patterns like -1 0 0 or 0 0 -1 or 0 -1 -1 or -1 -1 0
     val possiblepoints = mutableListOf<Int>()
-    board.forEachIndexed { index, i ->
-        if (index > 0 && index < board.size - 1) {
-            if (i == -1) {
-                if ((board[index - 1] == opponent && board[index + 1] != opponent) || (board[index + 1] == opponent && board[index - 1] != opponent)) {
-                    if (checkValidPosition(index, board, opponent)) {
-                        possiblepoints.add(index)
-                    }
-                }
-            }
-        }
+    board.findPattern(listOf(opponent, opponent, -1)).forEach {
+        if (board[it] == opponent) {
+            possiblepoints.add(it + 1)
+        } else possiblepoints.add(it)
+    }
+    board.findPattern(listOf(-1, opponent, opponent)).forEach {
+        if (board[it] == opponent) {
+            possiblepoints.add(it - 1)
+        } else possiblepoints.add(it)
     }
     println("FOUND $possiblepoints")
-    val possiblepointsranked = mutableMapOf<Int, Int>()
-    possiblepoints.forEachIndexed { i, _ ->
+    val possiblePointsRanked = mutableMapOf<Int, Int>()
+    possiblepoints.forEachIndexed { _, i ->
         val boardCopy = board.toMutableList()
         boardCopy[i] = opponent
-        boardCopy.findAdjacent(2, listOf(-1, BOT_TEAM)).forEach { (key, value) ->
+        boardCopy.findAdjacent(skip = listOf(-1, BOT_TEAM)).forEach { (key, value) ->
             if (i in (key..key + value)) {
-                possiblepointsranked[i] = value
-                return@forEach
+                possiblePointsRanked[i] = value
             }
         }
     }
-    println("Ordered $possiblepointsranked")
+    if (possiblePointsRanked.isNotEmpty()) {
+        return possiblePointsRanked.maxBy { it.value }.key
+    }
     println("TRYING TO FIND SPOT TO REMOVE OPPONENT")
     //Find spot to remove enemy counters
     // look for patterns like -1 0 1 or 1 0 -1
+    val possiblePoints = mutableListOf<Int>()
+    board.findPattern(listOf(-1, opponent, BOT_TEAM), -1).forEach { possiblePoints.add(it) }
+    board.findPattern(listOf(BOT_TEAM, opponent, -1), 1).forEach { possiblePoints.add(it) }
+    if (possiblePoints.isNotEmpty()) {
+        return possiblePoints.random()
+    }
     println("TRYING TO FIND SPOT TO CONTINUE CHAIN")
     //Find a spot to create a chain precursor (Preferably with center open so enemy cannot block it
     // look for patterns like 1 -1 -1 or -1 1 -1 or -1 -1 1
+    val possiblePointsWeighted = mutableMapOf<Int, Int>()
+    board.findPattern(listOf(BOT_TEAM, -1, null), 0).forEach {
+        if (board[it + 1] == -1) {
+            possiblePointsWeighted[it + 1] = 1
+        } else possiblePointsWeighted[it] = 0
+    }
+    board.findPattern(listOf(-1, BOT_TEAM, -1), 0).forEach {
+        possiblePointsWeighted[it + listOf(-1, 1).random()] = 0
+    }
+    board.findPattern(listOf(null, -1, BOT_TEAM), 0).forEach {
+        if (board[it - 1] == -1) {
+            possiblePointsWeighted[it - 1] = 1
+        }
+        possiblePointsWeighted[it] = 0
+    }
+    if (possiblePointsWeighted.isNotEmpty()) {
+        return possiblePointsWeighted.maxBy { it.value }.key
+    }
     println("TRYING TO FIND SAFE SPOT")
     //Find a spot to place a counter that is safe from enemy (1 free space on either side)
-    // look for patterns like -1 -1 -1 or 0 -1 -1 or -1 -1 0
+    // look for patterns like 0 -1 -1 or -1 -1 0
     println("TRYING TO PICK RANDOM SPOT")
     returned = -1
+    var attempts = 0
 //    println("PICKED $returned")
-    while (!checkValidPosition(returned, board, opponent)) {
+    while (!checkValidPosition(returned, board, opponent) && attempts < 20) {
 //        println("$returned IS INVALID TRYING AGAIN")
+        attempts++
         returned = (0..<board.size).random()
 //        println("PICKED $returned")
 //        println("VALID: ${checkValidPosition(returned, board, opponent)}")
     }
+    //Forfeit
+    if (!checkValidPosition(returned, board, opponent)) return -1
     println("RETURNING MOVE$returned")
-    //Forfit
-
 
     return returned
 }
 
 private fun findScorePoint(board: MutableList<Int>, opponent: Int): Int {
     val possibleScoringPoints = mutableListOf<Int>()
-    board.forEachIndexed { index, value ->
-        if (value == -1) {
-            //index < board.size
-            //index > 0
-            if (index < board.size - 1 && index > 0 && board[index - 1] == BOT_TEAM && board[index + 1] == BOT_TEAM) {
-                possibleScoringPoints.add(index)
-            } else if (index > 1 && board[index - 1] == BOT_TEAM && board[index - 2] == BOT_TEAM) {
-                possibleScoringPoints.add(index)
-            } else if (index < board.size - 2 && board[index + 1] == BOT_TEAM && board[index + 2] == BOT_TEAM) {
-                possibleScoringPoints.add(index)
-            }
-        }
-    }
+    board.findPattern(listOf(-1, BOT_TEAM, BOT_TEAM), -1).forEach { possibleScoringPoints.add(it) }
+    board.findPattern(listOf(BOT_TEAM, -1, BOT_TEAM)).forEach { possibleScoringPoints.add(it) }
+    board.findPattern(listOf(BOT_TEAM, BOT_TEAM, -1), 1).forEach { possibleScoringPoints.add(it) }
     val possibleScoringChains = mutableMapOf<Int, Int>()
     for (possibleScoringPoint in possibleScoringPoints) {
         val boardCopy = board.toMutableList()
@@ -250,6 +287,10 @@ fun main() {
             val botmove = bestNextMove(board)
             if (botmove != -1) {
                 board[botmove] = player
+            } else {
+                print("\u001b[H\u001b[2J")
+                println("The bot has forfeited")
+                break
             }
             player = opponent
             opponent = (player + 1) % 2
