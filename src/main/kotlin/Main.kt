@@ -183,102 +183,80 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     val possiblePoints = mutableListOf<Int>()
     val possiblePointsWeighted = mutableMapOf<Int, Int>()
     //with 1 as bot counter and 0 as opponent counter
-    //Operations
-    //Find a spot to score points
-    //Go through the list and either find patterns like 1 -1 1 or -1 1 1 or 1 1 -1
-    println("TRYING TO FIND SPOT TO SCORE")
-    board.findPattern(listOf(-1, BOT_TEAM, BOT_TEAM), -1)
-        .forEach { possiblePoints.add(it) } //Find patterns and append indexes to list
-    board.findPattern(listOf(BOT_TEAM, -1, BOT_TEAM)).forEach { possiblePoints.add(it) }
-    board.findPattern(listOf(BOT_TEAM, BOT_TEAM, -1), 1).forEach { possiblePoints.add(it) }
+    /*Bot Move priority:
+        -Score point: 1 1 -1, 1 -1 1, -1 1 1
+        -Remove counter: -1 0 1, 1 0 -1
+        -Block chain: 0 0 -1, -1 0 0
+        -Continue chain: 0 -1 -1, -1 -1 0
+        -Find a safe spot: -1 -1 -1
+        -Make a random move
+     */
 
-    possiblePoints.forEachIndexed { _, it ->
-        val boardCopy = board.toMutableList() //Create temporary copy list
-        boardCopy[it] = BOT_TEAM
-        boardCopy.findAdjacent(3, listOf(-1, opponent)).forEach { (key, value) -> //Assign the weight to
-            if (it in (key..key + value)) {
-                possiblePointsWeighted[it] = value
-                return@forEach
-            }
-        }
+    println("Looking for somewhere to score")
+    board.findPattern(listOf(BOT_TEAM, BOT_TEAM, -1), 1).forEach {
+        possiblePoints.add(it)
     }
-    if (possiblePointsWeighted.isNotEmpty()) {
-        return possiblePointsWeighted.maxByOrNull { it.value }!!.key
+    board.findPattern(listOf(BOT_TEAM, -1, BOT_TEAM)).forEach {
+        possiblePoints.add(it)
     }
-    println("TRYING TO FIND SPOT TO BLOCK")
-    //Find a spot to block an enemy chain
-    //find patterns like -1 0 0 or 0 0 -1
-    board.findPattern(listOf(opponent, opponent, -1)).forEach {
-        if (it < board.size - 2 && board[it + 2] == opponent) return@forEach
-        possiblePoints.add(it + 1)
+    board.findPattern(listOf(-1, BOT_TEAM, BOT_TEAM), -1).forEach {
+        possiblePoints.add(it)
     }
-    board.findPattern(listOf(-1, opponent, opponent)).forEach {
-        if (it > 1 && board[it - 2] == opponent) return@forEach
-        possiblePoints.add(it - 1)
-    }
-    println("FOUND $possiblePoints")
     possiblePoints.forEachIndexed { _, i ->
         val boardCopy = board.toMutableList()
-        boardCopy[i] = opponent
-        boardCopy.findAdjacent(skip = listOf(-1, BOT_TEAM)).forEach { (key, value) ->
+        boardCopy[i] = BOT_TEAM
+        boardCopy.findAdjacent(skip = listOf(-1, opponent)).forEach { (key, value) ->
             if (i in (key..key + value)) {
                 possiblePointsWeighted[i] = value
             }
         }
     }
+    println(possiblePointsWeighted)
     if (possiblePointsWeighted.isNotEmpty()) {
         return possiblePointsWeighted.maxBy { it.value }.key
     }
-    println("TRYING TO FIND SPOT TO REMOVE OPPONENT")
-    //Find spot to remove enemy counters
-    // look for patterns like -1 0 1 or 1 0 -1
-    board.findPattern(listOf(-1, opponent, BOT_TEAM)).forEach {
-        if (it > 1 && board[it - 2] == opponent) return@forEach
-        possiblePoints.add(it - 1)
-    }
-    board.findPattern(listOf(BOT_TEAM, opponent, -1)).forEach {
-        if (it < board.size - 2 && board[it + 2] == opponent) return@forEach
-        possiblePoints.add(it + 1)
-    }
-    if (possiblePoints.isNotEmpty()) {
-        return possiblePoints.random()
-    }
-    println("TRYING TO FIND SPOT TO CONTINUE CHAIN")
-    //Find a spot to create a chain precursor (Preferably with center open so enemy cannot block it
-    // look for patterns like 1 -1 -1 or -1 1 -1 or -1 -1 1
-    board.findPattern(listOf(BOT_TEAM, -1, null), 0).forEach {
-        if (it - 1 <= 0) return@forEach
-        if (board[it + 1] == -1) {
-            possiblePointsWeighted[it + 1] = 1
-        } else possiblePointsWeighted[it] = 0
-    }
-    board.findPattern(listOf(-1, BOT_TEAM, -1), 0).forEach {
-        possiblePointsWeighted[it + listOf(-1, 1).random()] = 0
-    }
-    board.findPattern(listOf(null, -1, BOT_TEAM), 0).forEach {
-        if (it + 1 >= board.size - 1) return@forEach
-        if (board[it - 1] == -1) {
-            possiblePointsWeighted[it - 1] = 1
+
+    println("Looking for somewhere to remove an opponents counter")
+    board.findPattern(listOf(-1, opponent, BOT_TEAM), -1).forEach {
+        if (it <= 0 || board[it - 1] != opponent) {
+            possiblePoints.add(it)
         }
-        possiblePointsWeighted[it] = 0
     }
-    if (possiblePointsWeighted.isNotEmpty()) {
-        return possiblePointsWeighted.maxBy { it.value }.key
-    }
-    println("TRYING TO FIND SAFE SPOT")
-    //Find a spot to place a counter that is safe from enemy (1 free space on either side)
-    // look for patterns like 0 -1 -1 or -1 -1 0 or -1 -1 -1
-    board.findPattern(listOf(-1, -1, -1)).forEach {
-        if (it - 1 <= 0) {
-            possiblePoints.add(it - 1)
-        } else if (it + 1 >= board.size - 1) {
-            possiblePoints.add(it + 1)
-        } else possiblePoints.add(it)
+    board.findPattern(listOf(BOT_TEAM, opponent, -1), 1).forEach {
+        if (it >= board.size - 1 || board[it + 1] != opponent) {
+            possiblePoints.add(it)
+        }
     }
     if (possiblePoints.isNotEmpty()) {
         return possiblePoints.random()
     }
+
+    println("Looking for somewhere to block an opponent chain")
+    board.findPattern(listOf(-1, opponent, opponent), -1).forEach {
+        if (it <= 0 || board[it - 1] != opponent) {
+            possiblePoints.add(it)
+        }
+    }
+    board.findPattern(listOf(opponent, opponent, -1), 1).forEach {
+        if (it >= board.size - 1 || board[it + 1] != opponent) {
+            possiblePoints.add(it)
+        }
+    }
+    if (possiblePoints.isNotEmpty()) {
+        return possiblePoints.random()
+    }
+
+    println("Looking for a safe spot")
+    //Find a spot to place a counter that is safe from enemy (1 free space on either side)
+    board.findPattern(listOf(-1, -1, -1)).forEach {
+        possiblePoints.add(it)
+    }
+    if (possiblePoints.isNotEmpty()) {
+        return possiblePoints.random()
+    }
+
     println("TRYING TO PICK RANDOM SPOT")
+    //Cycles through random indexes until it finds a valid spot
     val valid = mutableListOf<Int>()
     (0..<board.size).forEach {
         if (checkValidPosition(it, board, opponent)) valid.add(it)
@@ -353,5 +331,87 @@ fun main() {
 }
 
 
-
-
+//Recycling bin-----------------------------------------------------------------------------------------
+//    //Operations
+//    //Find a spot to score points
+//    //Go through the list and either find patterns like 1 -1 1 or -1 1 1 or 1 1 -1
+//    println("TRYING TO FIND SPOT TO SCORE")
+//    board.findPattern(listOf(-1, BOT_TEAM, BOT_TEAM), -1)
+//        .forEach { possiblePoints.add(it) } //Find patterns and append indexes to list
+//    board.findPattern(listOf(BOT_TEAM, -1, BOT_TEAM)).forEach { possiblePoints.add(it) }
+//    board.findPattern(listOf(BOT_TEAM, BOT_TEAM, -1), 1).forEach { possiblePoints.add(it) }
+//
+//    possiblePoints.forEachIndexed { _, it ->
+//        val boardCopy = board.toMutableList() //Create temporary copy list
+//        boardCopy[it] = BOT_TEAM
+//        boardCopy.findAdjacent(3, listOf(-1, opponent)).forEach { (key, value) -> //Assign the weight to
+//            if (it in (key..key + value)) {
+//                possiblePointsWeighted[it] = value
+//                return@forEach
+//            }
+//        }
+//    }
+//    if (possiblePointsWeighted.isNotEmpty()) {
+//        return possiblePointsWeighted.maxByOrNull { it.value }!!.key
+//    }
+//    println("TRYING TO FIND SPOT TO BLOCK")
+//    //Find a spot to block an enemy chain
+//    //find patterns like -1 0 0 or 0 0 -1
+//    board.findPattern(listOf(opponent, opponent, -1)).forEach {
+//        if (it < board.size - 2 && board[it + 2] == opponent) return@forEach
+//        possiblePoints.add(it + 1)
+//    }
+//    board.findPattern(listOf(-1, opponent, opponent)).forEach {
+//        if (it > 1 && board[it - 2] == opponent) return@forEach
+//        possiblePoints.add(it - 1)
+//    }
+//    println("FOUND $possiblePoints")
+//    possiblePoints.forEachIndexed { _, i ->
+//        val boardCopy = board.toMutableList()
+//        boardCopy[i] = opponent
+//        boardCopy.findAdjacent(skip = listOf(-1, BOT_TEAM)).forEach { (key, value) ->
+//            if (i in (key..key + value)) {
+//                possiblePointsWeighted[i] = value
+//            }
+//        }
+//    }
+//    if (possiblePointsWeighted.isNotEmpty()) {
+//        return possiblePointsWeighted.maxBy { it.value }.key
+//    }
+//    println("TRYING TO FIND SPOT TO REMOVE OPPONENT")
+//    //Find spot to remove enemy counters
+//    // look for patterns like -1 0 1 or 1 0 -1
+//    board.findPattern(listOf(-1, opponent, BOT_TEAM)).forEach {
+//        if (it > 1 && board[it - 2] == opponent) return@forEach
+//        possiblePoints.add(it - 1)
+//    }
+//    board.findPattern(listOf(BOT_TEAM, opponent, -1)).forEach {
+//        if (it < board.size - 2 && board[it + 2] == opponent) return@forEach
+//        possiblePoints.add(it + 1)
+//    }
+//    if (possiblePoints.isNotEmpty()) {
+//        return possiblePoints.random()
+//    }
+//    println("TRYING TO FIND SPOT TO CONTINUE CHAIN")
+//    //Find a spot to create a chain precursor (Preferably with center open so enemy cannot block it
+//    // look for patterns like 1 -1 -1/1/0 or -1 1 -1 or -1/0/1 -1 1
+//    // revamp -1 -1 0, 0 -1 -1
+////    board.findPattern(listOf(BOT_TEAM, -1, null), 0).forEach {
+////        if (it - 1 <= 0) return@forEach
+////        if (board[it + 1] == -1) {
+////            possiblePointsWeighted[it + 1] = 1
+////        } else possiblePointsWeighted[it] = 0
+////    }
+////    board.findPattern(listOf(-1, BOT_TEAM, -1), 0).forEach {
+////        possiblePointsWeighted[it + listOf(-1, 1).random()] = 0
+////    }
+////    board.findPattern(listOf(null, -1, BOT_TEAM), 0).forEach {
+////        if (it + 1 >= board.size - 1) return@forEach
+////        if (board[it - 1] == -1) {
+////            possiblePointsWeighted[it - 1] = 1
+////        }
+////        possiblePointsWeighted[it] = 0
+////    }
+//    if (possiblePointsWeighted.isNotEmpty()) {
+//        return possiblePointsWeighted.maxBy { it.value }.key
+//    }
