@@ -1,5 +1,6 @@
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.NonBlockingReader
+import java.lang.Thread.sleep
 import java.util.*
 
 private var bluepoints = 0
@@ -142,22 +143,22 @@ private fun checkBoard(board: MutableList<Int>) {
 Basic display for the board
  */
 private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
-    print("[")
+    println("┌────┐".repeat(board.size))
     board.forEachIndexed { index, value ->
-        var displayed = "#"
+        var displayedCharacter = "  "
         when (value) {
-            0 -> displayed = displayed.red()
-            1 -> displayed = displayed.blue()
+            1 -> displayedCharacter = "##".blue()
+            0 -> displayedCharacter = "##".red()
         }
-        if (index == cursorPos)
-            displayed = displayed.bgGrey()
-        if (index == board.size - 1) {
-            print(displayed)
-        } else {
-            print("$displayed, ")
+        if (index == cursorPos) {
+            displayedCharacter = displayedCharacter.bgGrey()
         }
+        print("│ $displayedCharacter │")
+
+
     }
-    println("]")
+    println()
+    println("└────┘".repeat(board.size))
 }
 
 /*
@@ -246,8 +247,18 @@ private fun bestNextMove(board: MutableList<Int>): Int {
         return possiblePoints.random()
     }
 
+    println("Looking for somewhere to continue a chain")
+    board.findPattern(listOf(BOT_TEAM, -1, -1), 1).forEach {
+        possiblePoints.add(it)
+    }
+    board.findPattern(listOf(-1, -1, BOT_TEAM), -1).forEach {
+        possiblePoints.add(it)
+    }
+    if (possiblePoints.isNotEmpty()) {
+        return possiblePoints.random()
+    }
+
     println("Looking for a safe spot")
-    //Find a spot to place a counter that is safe from enemy (1 free space on either side)
     board.findPattern(listOf(-1, -1, -1)).forEach {
         possiblePoints.add(it)
     }
@@ -256,7 +267,6 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     }
 
     println("TRYING TO PICK RANDOM SPOT")
-    //Cycles through random indexes until it finds a valid spot
     val valid = mutableListOf<Int>()
     (0..<board.size).forEach {
         if (checkValidPosition(it, board, opponent)) valid.add(it)
@@ -266,6 +276,7 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     }
     return -1
 }
+
 
 fun main() {
     val terminal = TerminalBuilder.builder().build()
@@ -277,11 +288,33 @@ fun main() {
     var player = (0..1).random()
     var opponent = (player + 1) % 2
     var cursorPos = 0
+    print("Welcome to")
+    sleep(200)
+    print(".")
+    sleep(200)
+    print(".")
+    sleep(200)
+    println(".")
+    sleep(200)
+    println("_________ .__           .__                                       __  .__               ")
+    sleep(50)
+    println("\\_   ___ \\|  |__ _____  |__| ____   _______   ____ _____    _____/  |_|__| ____   ____  ")
+    sleep(50)
+    println("/    \\  \\/|  |  \\\\__  \\ |  |/    \\  \\_  __ \\_/ __ \\\\__  \\ _/ ___\\   __\\  |/  _ \\ /    \\ ")
+    sleep(50)
+    println("\\     \\___|   Y  \\/ __ \\|  |   |  \\  |  | \\/\\  ___/ / __ \\\\  \\___|  | |  (  <_> )   |  \\")
+    sleep(50)
+    println(" \\______  /___|  (____  /__|___|  /  |__|    \\___  >____  /\\___  >__| |__|\\____/|___|  /")
+    sleep(50)
+    println("        \\/     \\/     \\/        \\/               \\/     \\/     \\/                    \\/ ")
+    sleep(1000)
+
+
+    userInterface(board, cursorPos, player)
     while (true) {
         if (bluepoints >= POINTS_TO_WIN || redpoints >= POINTS_TO_WIN) {
             break
         }
-        println("${if (player == 0) "Red" else "Blue"}'s turn.")
         var valid = 0
         (0..<board.size).forEach {
             if (checkValidPosition(it, board, opponent)) valid++
@@ -317,17 +350,21 @@ fun main() {
             }
             cursorPos = sel.indexOf("^")
         }
-        print("\u001b[H\u001b[2J")
-        checkBoard(board)
-        displayBoard(board, cursorPos)
-        println(sel)
-        println("Blue: $bluepoints | Red: $redpoints")
+        userInterface(board, cursorPos, player)
     }
     if (bluepoints > redpoints) {
         println("Blue won")
     } else if (redpoints > bluepoints) {
         println("Red won")
     } else println("Stalemate")
+}
+
+private fun userInterface(board: MutableList<Int>, cursorPos: Int, player: Int) {
+    print("\u001b[H\u001b[2J")
+    checkBoard(board)
+    displayBoard(board, cursorPos)
+    println("Blue: $bluepoints | Red: $redpoints")
+    println("${if (player == 0) "Red" else "Blue"}'s turn.")
 }
 
 
