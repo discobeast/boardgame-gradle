@@ -205,6 +205,10 @@ private fun userInterface(board: MutableList<Int>, cursorPos: Int, player: Int) 
     println("${if (player == 0) "Red" else "Blue"}'s turn.")
 }
 
+private fun displayRules(){
+    println("Gay")
+}
+
 /**
  * Utility function to check if an index on the board is a valid position to place a counter
  * Arguments:
@@ -337,9 +341,6 @@ private fun bestNextMove(board: MutableList<Int>): Int {
  * Returns:N/A
  */
 fun main() {
-    val terminal = TerminalBuilder.builder().build()
-    terminal.enterRawMode() // Disables line buffering
-    val reader = terminal.reader()
     val board = MutableList(12) { -1 }
     val sel = MutableList(12) { " " }
     sel[0] = "^"
@@ -367,8 +368,24 @@ fun main() {
     sleep(50)
     println("        \\/     \\/     \\/        \\/               \\/     \\/     \\/                    \\/ ")
     sleep(1000)
+    println("Have you played Chain reaction before? (Y/N)")
+    var userInput: String? = null
+    while (userInput == null) {
+        print(": ")
+        userInput = readlnOrNull()?.lowercase()?.trim()
+        if (userInput.isNullOrEmpty() || !listOf("y","n").contains(userInput)) {
+            userInput = null
+        }
+    }
+    if (userInput == "y"){
+        displayRules()
+    }
 
 
+    val terminal = TerminalBuilder.builder().build() //These are initialized after
+    //                                                 Because these remove the ability to type in terminal
+    terminal.enterRawMode() // Disables line buffering
+    val reader = terminal.reader()
     userInterface(board, cursorPos, player)
     while (true) {
         if (bluepoints >= POINTS_TO_WIN || redpoints >= POINTS_TO_WIN) {
