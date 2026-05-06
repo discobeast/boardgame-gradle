@@ -1,5 +1,6 @@
 .gradle
 build/
+!build/libs/Boardgame-gradle.jar
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
