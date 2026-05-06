@@ -90,7 +90,7 @@ I will test if the game prohibits me from placing a counter in an invalid spot.
 ### Test Data To Use
 
 I will attempt to place a counter between 2 opponent counters and
-attempt to place a counter on top of a prexisiting counter.
+attempt to place a counter on top of a preexisting counter.
 
 ### Expected Test Result
 
@@ -110,26 +110,13 @@ I will place a counter next to an opponent counter and allow the opponent to pla
 ### Expected Test Result
 
 My counter should be surrounded by opponent and removed
+(This should happen instantly)
 
 ---
 
 ## Gameplay: Scoring
 
-I will test if the code correctly recognises counter chains and assigns points
-
-### Test Data To Use
-
-I will create a chain of 3+ counters
-
-### Expected Test Result
-
-My counters should be removed and the amount added onto my score total.
-
----
-
-## Gameplay: Scoring
-
-I will test if the code correctly recognises counter chains and assigns points
+I will test if the code correctly recognizes counter chains and assigns points correctly
 
 ### Test Data To Use
 
@@ -144,7 +131,7 @@ My counters should be removed and the amount added onto my score total.
 ## Gameplay: Win condition
 
 I will test if the game triggers the win condition upon either:
-A player gets >= 10 points or the current player has no move
+A player gets >= 10 points or the current player has no legal move
 
 ### Test Data To Use
 
@@ -154,7 +141,7 @@ I will win a game
 
 ### Expected Test Result
 
-upon stalemate the player with the most points should win.
+upon stalemate the player with the most points should win or if the scores are equal it should print "Stalemate"
 when I lose it should say that "Blue won"
 when I win it should say that "Red won"
 

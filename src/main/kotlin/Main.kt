@@ -36,7 +36,7 @@ private const val BOT = true
  * Returns: N/A
  */
 fun <E> MutableList<E>.switch(index: Int, index2: Int) {
-    if (index2 == -1 || index2 >= this.size) return
+    if (index2 == -1 || index2 >= this.size) return //Check if indexes are valid
     Collections.swap(this, index, index2)
 }
 
@@ -47,21 +47,21 @@ fun <E> MutableList<E>.switch(index: Int, index2: Int) {
  *  -Ignored values (List<E>) - List of values to skip over when checking
  * Returns: Chains<MutableMap<Start index (Int),Size (Int)>
  */
-
 fun <E> MutableList<E>.findAdjacent(size: Int = 2, ignoredValues: List<E> = listOf()): MutableMap<Int, Int> {
     val foundChains = mutableMapOf<Int, Int>()
     this.forEachIndexed { index, value ->
-        if (value in ignoredValues) return@forEachIndexed
+        if (value in ignoredValues) return@forEachIndexed //Skip checks if the current index is already in a chain or is an ignored value
         foundChains.forEach { (chainStartIndex, chainSize) ->
             if (index in (chainStartIndex..<chainSize + chainStartIndex) || value in ignoredValues) {
                 return@forEachIndexed
             }
         }
         var num = 1
-        var matches = 1
+        var matches = 1 //Matches start at 1 so a chain of 2 is 1+1=2 instead of 0+1=1
         while (num > 0) {
             num--
-            if (index + matches - 1 != this.size - 1 && this[index + matches] == this[index + matches - 1]) {
+            val shiftedIndex = index + matches - 1 //Because matches start at one we remove one from matches here to start the index offset at 0
+            if (shiftedIndex != this.size - 1 && this[shiftedIndex + 1] == this[shiftedIndex]) {
                 num++
                 matches++
             }
@@ -81,13 +81,12 @@ fun <E> MutableList<E>.findAdjacent(size: Int = 2, ignoredValues: List<E> = list
  *  -Offset (Int) - return offset for found pattern index
  * Returns: List of indexes offset by specified offset (Default to center of pattern)
  */
-
 fun <E> MutableList<E>.findPattern(pattern: List<Any?>, offset: Int = 0): List<Int> {
     val matches = mutableListOf<Int>()
     this.forEachIndexed { index, _ ->
-        if (index > 0 && index < this.size - 1) {
-            val slice = this.slice(index - 1..index + 1) as List<*>
-            val isMatch = pattern.zip(slice).all { (p, s) ->
+        if (index > 0 && index < this.size - 1) { //Because the pattern is 3 long we have to make sure we are at least +-1 index off the start and end indexes
+            val slice = this.slice(index - 1..index + 1) as List<*> //We split the list into groups of 3's to compare with
+            val isMatch = pattern.zip(slice).all { (p, s) ->  //We then splice the slice and the pattern together so pattern [A,B,C] and slice [D,E,F] become [A,D],[B,E],[C,F] so we can compare easier
                 when (p) {
                     null -> true           // wildcard, matches anything
                     is List<*> -> p.contains(s)  // multi-match,s must be in the list
@@ -102,8 +101,10 @@ fun <E> MutableList<E>.findPattern(pattern: List<Any?>, offset: Int = 0): List<I
     return matches
 }
 
-/*
-Returns 1-4 depending on what arrow key has been pressed
+/**
+ * Waits for a valid keyboard input from the user
+ * Arguments: reader (NonBlockingReader) - initalized terminal keypress reader
+ * Returns: 1-4 depending on the arrow key selected, -1 if error occurs
  */
 fun waitForKey(reader: NonBlockingReader): Int {
     var char: Int = -1
@@ -111,7 +112,7 @@ fun waitForKey(reader: NonBlockingReader): Int {
     var cursorKey = false
 
     while (numVals > 0) {
-        val charCode = reader.read()
+        val charCode = reader.read() //This pauses execution until we get a keypress from the user
         numVals--
         when (charCode) {
             27 -> { // Cursor keys are 3 bytes, first is 27 (ESC)
@@ -124,10 +125,10 @@ fun waitForKey(reader: NonBlockingReader): Int {
 
     return if (cursorKey) {
         when (char) {
-            65 -> 1
-            66 -> 2
-            67 -> 3
-            68 -> 4
+            65 -> 1 //Up arrow
+            66 -> 2 //Down arrow
+            67 -> 3 //Right arrow
+            68 -> 4 //Left arrow
             else -> -1
         }
     } else {
@@ -135,12 +136,13 @@ fun waitForKey(reader: NonBlockingReader): Int {
     }
 }
 
-/*
-Checks if every index in the board is in a valid position
-Awards point according to existing chains
+/**
+ * Checks every index on the board to remove invalid counters as well as handles the scoring and removing of created chains
+ * Arguments: Board (MutableList<Int>) - The board array
+ * Returns: N/A
  */
 private fun checkBoard(board: MutableList<Int>) {
-    board.forEachIndexed { index, value ->
+    board.forEachIndexed { index, value -> //Just loops through every index (Apart from the start and end indexes) and checks that they are not surrounded
         if (index == 0 || index == board.size - 1 || value == -1) { //Skip check if value is -1 or at the beginning/end of the list
             return@forEachIndexed
         }
@@ -151,7 +153,7 @@ private fun checkBoard(board: MutableList<Int>) {
         }
     }
     board.findAdjacent(3, listOf(-1)).forEach { (chain, size) -> //Go through chains and score points
-        when (board[chain]) {
+        when (board[chain]) { //the value at the beginning index of the chain is the value of the team it belongs to
             1 -> bluepoints += size
             0 -> redpoints += size
         }
@@ -162,8 +164,12 @@ private fun checkBoard(board: MutableList<Int>) {
 
 }
 
-/*
-Basic display for the board
+/**
+ * Board display function
+ * Arguments:
+ *  -Board (MutableList<Int>) - The board array
+ *  -CursorPos (Int) - Location of the cursor on the board array
+ * Returns: N/A
  */
 private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
     println("┌────┐".repeat(board.size))
@@ -184,10 +190,30 @@ private fun displayBoard(board: MutableList<Int>, cursorPos: Int) {
     println("└────┘".repeat(board.size))
 }
 
-/*
-If statement that defines the legal position for a point
+/**
+ * Main user interface of the game
+ * Arguments:
+ *  -Board (MutableList<Int>) - The board array
+ *  -CursorPos (Int) - Location of the cursor on the board array
+ * Returns: N/A
  */
-private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent: Int): Boolean {
+private fun userInterface(board: MutableList<Int>, cursorPos: Int, player: Int) {
+    print("\u001b[H\u001b[2J")
+    checkBoard(board)
+    displayBoard(board, cursorPos)
+    println("Blue: $bluepoints | Red: $redpoints")
+    println("${if (player == 0) "Red" else "Blue"}'s turn.")
+}
+
+/**
+ * Utility function to check if an index on the board is a valid position to place a counter
+ * Arguments:
+ *  -Board (MutableList<Int>) - The board array
+ *  -Index (Int) - Board index to evaluate
+ *  -Opponent (Int) - The opponent of the player you are trying to check the index for
+ * Returns: Boolean (The specified index is a valid position to place a counter True/False)
+ */
+private fun checkValidPosition(index: Int, board: MutableList<Int>, opponent: Int): Boolean {
     // Revised: First check if point is either (free on either side and valid spot) or (0,board.size - 1) then check if value is not -1
     // (cursorPos == 0 || cursorPos == board.size - 1)
     // (cursorPos > 0 && cursorPos < board.size-1)
@@ -198,25 +224,44 @@ private fun checkValidPosition(cursorPos: Int, board: MutableList<Int>, opponent
 
     //If statement that checks if the given index is either boundary or not surrounded by opponents and if the index is not already occupied
     //In hindsight making it a single if statement was not a great idea but im too afraid to change it (Not even I know how it works)
-    return (((cursorPos == 0 || cursorPos == board.size - 1) || ((cursorPos > 0 && cursorPos < board.size - 1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))) && board[cursorPos] == -1)
+    return (((index == 0 || index == board.size - 1) || ((index > 0 && index < board.size - 1) && (board[index - 1] != opponent || board[index + 1] != opponent))) && board[index] == -1)
 }
 
-/*
-Ai opponent behavior tree
+/**
+ * Function that contains all the logic for the AI opponent
+ * Arguments: Board(MutableList<Int>) - The board array
+ * Returns: An index on the board or -1 if there is no valid position
  */
 private fun bestNextMove(board: MutableList<Int>): Int {
     val opponent = (BOT_TEAM + 1) % 2
     val possiblePoints = mutableListOf<Int>()
     val possiblePointsWeighted = mutableMapOf<Int, Int>()
     //with 1 as bot counter and 0 as opponent counter
-    /*Bot Move priority:
-        -Score point: 1 1 -1, 1 -1 1, -1 1 1
-        -Remove counter: -1 0 1, 1 0 -1
-        -Block chain: 0 0 -1, -1 0 0
-        -Continue chain: 0 -1 -1, -1 -1 0
-        -Find a safe spot: -1 -1 -1
+    /*In order of priority:
+        -Remove counter patterns: -1 0 1, 1 0 -1
+        -Score point patterns: 1 1 -1, 1 -1 1, -1 1 1
+        -Block chain patterns: 0 0 -1, -1 0 0
+        -Continue chain patterns: 0 -1 -1, -1 -1 0
+        -Find a safe spot patterns: -1 -1 -1
         -Make a random move
      */
+
+//    println("Looking for somewhere to remove an opponents counter")
+    board.findPattern(listOf(-1, opponent, BOT_TEAM), -1).forEach {
+        //Makes sure the bot won't try to place inside an area bordered by the opponent
+        if (it <= 0 || board[it - 1] != opponent) {
+            possiblePoints.add(it)
+        }
+    }
+    board.findPattern(listOf(BOT_TEAM, opponent, -1), 1).forEach {
+        //Makes sure the bot won't try to place inside an area bordered by the opponent
+        if (it >= board.size - 1 || board[it + 1] != opponent) {
+            possiblePoints.add(it)
+        }
+    }
+    if (possiblePoints.isNotEmpty()) {
+        return possiblePoints.random()
+    }
 
 //    println("Looking for somewhere to score")
     board.findPattern(listOf(BOT_TEAM, BOT_TEAM, -1), 1).forEach {
@@ -228,33 +273,17 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     board.findPattern(listOf(-1, BOT_TEAM, BOT_TEAM), -1).forEach {
         possiblePoints.add(it)
     }
-    possiblePoints.forEachIndexed { _, i ->
+    possiblePoints.forEachIndexed { _, i -> //Checks each possible move and gives it a weight depending on how many points it would score
         val boardCopy = board.toMutableList()
         boardCopy[i] = BOT_TEAM
-        boardCopy.findAdjacent(ignoredValues = listOf(-1, opponent)).forEach { (key, value) ->
+        boardCopy.findAdjacent(ignoredValues = listOf(-1, opponent)).forEach { (key, value) -> //If the point is inside a chain, assign weight based on size
             if (i in (key..key + value)) {
                 possiblePointsWeighted[i] = value
             }
         }
     }
-    println(possiblePointsWeighted)
     if (possiblePointsWeighted.isNotEmpty()) {
         return possiblePointsWeighted.maxBy { it.value }.key
-    }
-
-//    println("Looking for somewhere to remove an opponents counter")
-    board.findPattern(listOf(-1, opponent, BOT_TEAM), -1).forEach {
-        if (it <= 0 || board[it - 1] != opponent) {
-            possiblePoints.add(it)
-        }
-    }
-    board.findPattern(listOf(BOT_TEAM, opponent, -1), 1).forEach {
-        if (it >= board.size - 1 || board[it + 1] != opponent) {
-            possiblePoints.add(it)
-        }
-    }
-    if (possiblePoints.isNotEmpty()) {
-        return possiblePoints.random()
     }
 
 //    println("Looking for somewhere to block an opponent chain")
@@ -302,6 +331,11 @@ private fun bestNextMove(board: MutableList<Int>): Int {
     return -1 //forfeit
 }
 
+/**
+ * Main loop
+ * Arguments:N/A
+ * Returns:N/A
+ */
 fun main() {
     val terminal = TerminalBuilder.builder().build()
     terminal.enterRawMode() // Disables line buffering
@@ -382,12 +416,4 @@ fun main() {
     } else if (redpoints > bluepoints) {
         println("Red won")
     } else println("Stalemate")
-}
-
-private fun userInterface(board: MutableList<Int>, cursorPos: Int, player: Int) {
-    print("\u001b[H\u001b[2J")
-    checkBoard(board)
-    displayBoard(board, cursorPos)
-    println("Blue: $bluepoints | Red: $redpoints")
-    println("${if (player == 0) "Red" else "Blue"}'s turn.")
 }
