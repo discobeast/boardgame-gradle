@@ -99,6 +99,40 @@ A counter should not be placed in both cases.
 
 ---
 
+## Input: yesOrNo function - **VALID**
+
+I will test if the yesOrNo function that is used to ask the user whether they want to play against a bot/know the rules
+accepts valid inputs
+
+### Test Data To Use
+
+I will answer Y to "Have you played Chain Reaction before? (Y/N)"
+I will answer N to "Would you like to play against a bot? (Y/N)"
+
+### Expected Test Result
+
+The game shouldn't display the rules and the bot should be inactive.
+
+---
+
+## Input: Selection - **INVALID**
+
+I will test if the yesOrNo function that is used to ask the user whether they want to play against a bot/know the rules
+rejects invalid inputs
+
+### Test Data To Use
+
+I will answer "   " to "Have you played Chain Reaction before? (Y/N)"
+I will answer nothing to "Have you played Chain Reaction before? (Y/N)"
+I will answer qrwtw to "Have you played Chain Reaction before? (Y/N)"
+I will answer wowza to "Have you played Chain Reaction before? (Y/N)"
+
+### Expected Test Result
+
+In all cases the program should prompt me again for an input.
+
+---
+
 ## Gameplay: Counter removal when bordered by opponent counters
 
 I will test if the game correctly removes counters that become surrounded by opponent counters
@@ -142,8 +176,7 @@ I will win a game
 ### Expected Test Result
 
 upon stalemate the player with the most points should win or if the scores are equal it should print "Stalemate"
-when I lose it should say that "Blue won"
-when I win it should say that "Red won"
+For each game the player with 10 points should be labeled as the victor.
 
 ---
 
