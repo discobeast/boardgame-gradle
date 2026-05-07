@@ -1,4 +1,4 @@
-# PROJECT NAME HERE
+# CHAIN REACTION
 
 by Jesse vanwyk
 
