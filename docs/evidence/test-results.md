@@ -15,7 +15,7 @@ I will press the right arrow key 3x then the left arrow key 3x and then the up a
 
 ### Test Result
 
-
+![Keyboard_testing.gif](screenshots/Keyboard_testing.gif)
 
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
@@ -31,7 +31,7 @@ I will press every key on the keyboard
 
 ### Test Result
 
-
+![Keyboard_testing.gif](screenshots/Keyboard_testing.gif)
 
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
@@ -46,7 +46,6 @@ I will test if I can place counters on the board
 I will attempt to place a counter in a valid spot on the board
 
 ### Test Result
-
 
 
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
@@ -64,7 +63,6 @@ I will attempt to place counters at either end of the board
 ### Test Result
 
 
-
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
 ---
@@ -78,7 +76,6 @@ I will test if the code prohibits me from attempting to select a cell outside th
 I will use the arrowkeys to attempt to navigate past the righthandside and lefthandside of the board.
 
 ### Test Result
-
 
 
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.

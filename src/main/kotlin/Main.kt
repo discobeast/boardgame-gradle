@@ -28,7 +28,6 @@ private var redpoints = 0
 //Runtime settings
 private const val POINTS_TO_WIN = 10
 private const val BOT_TEAM = 1
-private const val BOT = true
 
 /**
  * Switch two given indexes in a list
@@ -205,8 +204,72 @@ private fun userInterface(board: MutableList<Int>, cursorPos: Int, player: Int) 
     println("${if (player == 0) "Red" else "Blue"}'s turn.")
 }
 
+/**
+ * Basic function to display ruleset for the game
+ * Arguments: Reader (NonBlockingReader) - Terminal input
+ * Returns: N/A
+ */
 private fun displayRules(){
-    println("Gay")
+    println("""
+        Chain reaction is a 2 player game.
+        The players will take alternating turns placing counters on the board.
+        If a players counter is directly adjacent to their opponents counters on both sides it is removed from the board.
+        Likewise you cannot place a counter between 2 opponent counters.
+        The goal of the game is to make unbroken chains of 3+ counters.
+        These chains will "explode" and you will gain points depending on the length of the chain.
+        A player cannot skip their turn.
+        In the event that the current player cannot make a valid move, the player with the most points wins or stalemate is called if both players are equal.
+        First player to 10 points wins.
+        
+        Press enter when you are ready to continue.
+    """.trimIndent())
+    readlnOrNull() //Pauses execution till the user presses enter
+}
+
+/**
+ * Utility function to act as a Y/N choice
+ * Arguments: N/A
+ * Returns: True or False depending on whether user selected Y or N
+ */
+private fun yesOrNo() : Boolean{
+    var userInput: String? = null
+    while (userInput == null) {
+        print(": ")
+        userInput = readlnOrNull()?.lowercase()?.trim()
+        if (userInput.isNullOrEmpty() || !listOf("y","n").contains(userInput)) {
+            userInput = null
+        }
+    }
+    return userInput == "y"
+}
+
+/**
+ * Title card of the game
+ * Arguments: N/A
+ * Returns: N/A
+ */
+private fun titleCard() {
+    print("\u001b[H\u001b[2J")
+    print("Welcome to")
+    sleep(200)
+    print(".")
+    sleep(200)
+    print(".")
+    sleep(200)
+    println(".")
+    sleep(200)
+    println("_________ .__           .__                                       __  .__               ")
+    sleep(50)
+    println("\\_   ___ \\|  |__ _____  |__| ____   _______   ____ _____    _____/  |_|__| ____   ____  ")
+    sleep(50)
+    println("/    \\  \\/|  |  \\\\__  \\ |  |/    \\  \\_  __ \\_/ __ \\\\__  \\ _/ ___\\   __\\  |/  _ \\ /    \\ ")
+    sleep(50)
+    println("\\     \\___|   Y  \\/ __ \\|  |   |  \\  |  | \\/\\  ___/ / __ \\\\  \\___|  | |  (  <_> )   |  \\")
+    sleep(50)
+    println(" \\______  /___|  (____  /__|___|  /  |__|    \\___  >____  /\\___  >__| |__|\\____/|___|  /")
+    sleep(50)
+    println("        \\/     \\/     \\/        \\/               \\/     \\/     \\/                    \\/ ")
+    sleep(1000)
 }
 
 /**
@@ -347,43 +410,12 @@ fun main() {
     var player = (0..1).random()
     var opponent = (player + 1) % 2
     var cursorPos = 0
-    print("\u001b[H\u001b[2J")
-    print("Welcome to")
-    sleep(200)
-    print(".")
-    sleep(200)
-    print(".")
-    sleep(200)
-    println(".")
-    sleep(200)
-    println("_________ .__           .__                                       __  .__               ")
-    sleep(50)
-    println("\\_   ___ \\|  |__ _____  |__| ____   _______   ____ _____    _____/  |_|__| ____   ____  ")
-    sleep(50)
-    println("/    \\  \\/|  |  \\\\__  \\ |  |/    \\  \\_  __ \\_/ __ \\\\__  \\ _/ ___\\   __\\  |/  _ \\ /    \\ ")
-    sleep(50)
-    println("\\     \\___|   Y  \\/ __ \\|  |   |  \\  |  | \\/\\  ___/ / __ \\\\  \\___|  | |  (  <_> )   |  \\")
-    sleep(50)
-    println(" \\______  /___|  (____  /__|___|  /  |__|    \\___  >____  /\\___  >__| |__|\\____/|___|  /")
-    sleep(50)
-    println("        \\/     \\/     \\/        \\/               \\/     \\/     \\/                    \\/ ")
-    sleep(1000)
+    titleCard()
     println("Have you played Chain reaction before? (Y/N)")
-    var userInput: String? = null
-    while (userInput == null) {
-        print(": ")
-        userInput = readlnOrNull()?.lowercase()?.trim()
-        if (userInput.isNullOrEmpty() || !listOf("y","n").contains(userInput)) {
-            userInput = null
-        }
-    }
-    if (userInput == "y"){
-        displayRules()
-    }
-
-
-    val terminal = TerminalBuilder.builder().build() //These are initialized after
-    //                                                 Because these remove the ability to type in terminal
+    if (!yesOrNo()) displayRules()
+    println("Would you like to play against a bot? (Y/N)")
+    val botEnabled = yesOrNo()
+    val terminal = TerminalBuilder.builder().build() //These are initialized afterward because these remove the ability to type in terminal
     terminal.enterRawMode() // Disables line buffering
     val reader = terminal.reader()
     userInterface(board, cursorPos, player)
@@ -398,7 +430,7 @@ fun main() {
         if (valid <= 0) break
 
         // if BOT is true then check if it's the bots turn else always return true
-        if (BOT && player == BOT_TEAM) {
+        if (botEnabled && player == BOT_TEAM) {
             val botMove = bestNextMove(board)
             if (botMove != -1) {
                 if (!checkValidPosition(botMove, board, opponent)) {

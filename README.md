@@ -6,8 +6,7 @@ by Jesse vanwyk
 
 This is a programming project for **NCEA Level 2**, assessed against standard [91896](docs/task/as91896.pdf).
 
-The project is written in the [Kotlin](https://kotlinlang.org) programming language and demonstrates a number of *
-*advanced programming techniques**:
+The project is written in the [Kotlin](https://kotlinlang.org) programming language and demonstrates a number of **advanced programming techniques**:
 
 - Modifying data stored in collections
 - Storing multi-dimensional data in collections
@@ -15,7 +14,7 @@ The project is written in the [Kotlin](https://kotlinlang.org) programming langu
 - Using non-trivial string manipulation
 - Using additional non-core libraries
 
-** EDIT LIST ABOVE TO MATCH YOUR PROJECT**
+[//]: # (** EDIT LIST ABOVE TO MATCH YOUR PROJECT**)
 
 ---
 
@@ -29,7 +28,7 @@ The project is written in the [Kotlin](https://kotlinlang.org) programming langu
 
 ## Project Description
 
-**PLACE YOUR PROJECT DESCRIPTION HERE**
+[//]: # (**PLACE YOUR PROJECT DESCRIPTION HERE**)
 This project is my version of Chain Reaction.
 It primarily uses arrowkeys as user inputs and features an optional AI opponent.
 
