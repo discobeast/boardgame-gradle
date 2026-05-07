@@ -290,7 +290,7 @@ private fun checkValidPosition(index: Int, board: MutableList<Int>, opponent: In
     // (((cursorPos == 0 || cursorPos == board.size - 1)||((cursorPos > 0 && cursorPos < board.size-1) && (board[cursorPos - 1] != opponent || board[cursorPos + 1] != opponent))) && board[cursorPos] == -1)
 
     //If statement that checks if the given index is either boundary or not surrounded by opponents and if the index is not already occupied
-    //In hindsight making it a single if statement was not a great idea but im too afraid to change it (Not even I know how it works)
+    //In hindsight making it a single if statement was not a great idea. However, im too afraid to change it (Not even I know how it works)
     return (((index == 0 || index == board.size - 1) || ((index > 0 && index < board.size - 1) && (board[index - 1] != opponent || board[index + 1] != opponent))) && board[index] == -1)
 }
 

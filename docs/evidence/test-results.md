@@ -47,7 +47,7 @@ I will attempt to place a counter in a valid spot on the board
 
 ### Test Result
 
-
+![Scoring_and_counter_removal.gif](screenshots/Scoring_and_counter_removal.gif)
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
 ---
@@ -62,7 +62,7 @@ I will attempt to place counters at either end of the board
 
 ### Test Result
 
-
+![selection_Boundary_testing.gif](screenshots/selection_Boundary_testing.gif)
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
 ---
@@ -77,7 +77,7 @@ I will use the arrowkeys to attempt to navigate past the righthandside and lefth
 
 ### Test Result
 
-
+![selection_Boundary_testing.gif](screenshots/selection_Boundary_testing.gif)
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
 ---
@@ -109,7 +109,7 @@ I will place a counter next to an opponent counter and allow the opponent to pla
 
 ### Test Result
 
-
+![Scoring_and_counter_removal.gif](screenshots/Scoring_and_counter_removal.gif)
 
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
@@ -125,7 +125,7 @@ I will create a chain of 3+ counters
 
 ### Test Result
 
-
+![Scoring_and_counter_removal.gif](screenshots/Scoring_and_counter_removal.gif)
 
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
@@ -144,7 +144,7 @@ I will win a game
 
 ### Test Result
 
-
+![stalemate_blueWin_redWin.gif](screenshots/stalemate_blueWin_redWin.gif)
 
 Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result. Comment on test result.
 
